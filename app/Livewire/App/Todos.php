@@ -23,7 +23,7 @@ class Todos extends Component
         ]);
 
         if ($validator->fails()) {
-            return ['errors' => $validator->errors()->toArray()];
+            return ['errors' => ['name' => 'Invalid title']];
         }
         
         Todo::create(['title' => $title]);
@@ -38,10 +38,16 @@ class Todos extends Component
         ]);
 
         if ($validator->fails()) {
-            return ['errors' => $validator->errors()->toArray()];
+            return ['errors' => ['name' => 'Invalid id']];
         }
 
-        Todo::find($id)->delete();
+        $todo = Todo::find($id);
+
+        if (!$todo) {
+            return ['errors' => ['name' => ['Todo not found']]];
+        }
+
+        $todo->delete();
         $this->todos = Todo::all()->toArray();
         return $this->todos;
     }

@@ -2,7 +2,7 @@
     const { wire } = $props();
 
     let todos = $state(wire.todos.map((todo) => ({ ...todo })));
-    let errors = $state({});
+    let errors = $state([]);
 
     const addTodo = async (e: SubmitEvent) => {
         e.preventDefault();
@@ -13,7 +13,7 @@
         const res = await wire.addTodo(title);
 
         if (res.errors) {
-            errors = res.errors;
+            errors.push(res.errors.name);
             return;
         }
 
@@ -29,7 +29,16 @@
         const formData = new FormData(form);
         const id = formData.get("id") as string;
 
-        todos = await wire.deleteTodo(id);
+        console.log(id);
+
+        const res = await wire.deleteTodo(id);
+
+        if (res.errors) {
+            errors.push(res.errors.name);
+            return;
+        }
+
+        todos = res;
     };
 </script>
 
@@ -47,8 +56,12 @@
                 >Add Todo</button
             >
         </div>
-        {#if errors.title}
-            <p class="text-sm text-red-500">{errors.title[0]}</p>
+        {#if errors.length > 0}
+            <div class="space-y-2">
+                {#each errors as error}
+                    <p class="text-sm text-red-500">{error}</p>
+                {/each}
+            </div>
         {/if}
     </form>
 
