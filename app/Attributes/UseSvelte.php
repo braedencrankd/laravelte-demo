@@ -4,23 +4,24 @@ namespace App\Attributes;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
-#[\Attribute, \Override]
+#[\Attribute]
 class UseSvelte extends LivewireAttribute
 {
+
+    public function hydrate()
+    {
+      $this->component->skipRender();
+    }
+
     public function dehydrate($context)
     {
+      
       $component = $this->getComponent();
       $componentName = $component->getName();
       $svelteComponentPath = str_replace('.', '/', $componentName);
 
-      $props = collect($component->all())
-            ->map(fn($value) => is_object($value) ? $value->toArray() : $value)
-            ->toJson();
-
       $method = <<<JS
-      console.log('svelte component mounted');
-      // Get the target element using the component ID
-      const target = document.getElementById('counter');
+      const target = document.querySelector(`[wire\\\:id="{$component->getId()}"]`);
 
       if (!target) {
         console.error('Target element not found');
@@ -29,10 +30,14 @@ class UseSvelte extends LivewireAttribute
 
       const SvelteComponent = window.components["/resources/js/livewire/{$svelteComponentPath}.svelte"].default;
 
+      const props = {
+        wire: \$wire
+      }
+
       // mount the component
       svelte.mount(SvelteComponent, {
         target: target,
-        props: {$props}
+        props: props
       });
 
       JS;
